@@ -1,0 +1,16 @@
+services:
+  db:
+    image: postgres:18
+    container_name: microgrpc-postgres
+    environment:
+      POSTGRES_USER: root
+      POSTGRES_PASSWORD: root
+    ports:
+      - "5432:5432"
+    volumes:
+      - ./db-init:/docker-entrypoint-initdb.d
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U root"]
+      interval: 2s
+      timeout: 3s
+      retries: 10

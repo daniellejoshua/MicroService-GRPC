@@ -1,0 +1,9 @@
+--java_out=/home/danielle/JavaLearning/MicroServiceGRPC/customer-service/target/generated-sources/protobuf
+--plugin=protoc-gen-0_6a2b90ecfc78434c767b735083bb23d7eb74f4b9=/home/danielle/JavaLearning/MicroServiceGRPC/customer-service/target/protobuf-maven-plugin/generate/generate/artifacts/protoc-gen-grpc-java-7ad0adfaf013b17760f56f316d50bfbfcac18724.exe
+--0_6a2b90ecfc78434c767b735083bb23d7eb74f4b9_out=/home/danielle/JavaLearning/MicroServiceGRPC/customer-service/target/generated-sources/protobuf
+--0_6a2b90ecfc78434c767b735083bb23d7eb74f4b9_opt=@generated=omit
+/home/danielle/JavaLearning/MicroServiceGRPC/customer-service/src/main/proto/customer.proto
+--proto_path=/home/danielle/JavaLearning/MicroServiceGRPC/customer-service/src/main/proto
+--proto_path=/home/danielle/JavaLearning/MicroServiceGRPC/customer-service/target/protobuf-maven-plugin/generate/generate/archives/grpc-services-1.83.1-c80375353df096d60b431db97f24e25730adcdb1
+--proto_path=/home/danielle/JavaLearning/MicroServiceGRPC/customer-service/target/protobuf-maven-plugin/generate/generate/archives/protobuf-java-3.25.9-f6208275b8356faf240dc3fb5ed432c5dd514f92
+--proto_path=/home/danielle/JavaLearning/MicroServiceGRPC/customer-service/target/protobuf-maven-plugin/generate/generate/archives/proto-google-common-protos-2.64.1-6e7a7c4b860e1f8233c4ca2129afd2833157bc01
