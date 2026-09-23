@@ -63,8 +63,7 @@ public class GrpcCustomerService extends CustomerServiceGrpc.CustomerServiceImpl
             CustomerEntity saved = customerRepository.save(entity);
 
             CreateCustomerResponse reply = CreateCustomerResponse.newBuilder()
-                .setCustomer(toProto(saved)).build();
-
+            .setCustomer(toProto(saved)).build();
             responseObserver.onNext(reply);
             responseObserver.onCompleted();
     }   catch (DataIntegrityViolationException e) {
