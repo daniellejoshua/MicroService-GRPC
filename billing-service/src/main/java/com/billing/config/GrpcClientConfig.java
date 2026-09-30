@@ -6,10 +6,13 @@ import io.grpc.ManagedChannelBuilder;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import com.customer.grpc.CustomerServiceGrpc;
+
+import java.util.concurrent.TimeUnit;
 
 @Configuration
 public class GrpcClientConfig {
-    @Value("${customer.service.host.localhost}")
+    @Value("${customer.service.host:localhost}")
     private String host;
 
     @Value("${customer.service.port:9090}")
@@ -21,7 +24,7 @@ public class GrpcClientConfig {
     }
     @Bean
     public CustomerServiceGrpc.CustomerServiceBlockingStub customerBlockingStub(ManagedChannel channel) {
-        return CustomerServiceGrpc.newBlockingStub(channel);
+        return CustomerServiceGrpc.newBlockingStub(channel).withDeadlineAfter(5, TimeUnit.SECONDS);
     }
 
 }

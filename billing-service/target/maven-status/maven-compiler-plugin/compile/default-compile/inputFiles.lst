@@ -1,5 +1,10 @@
+/home/danielle/JavaLearning/MicroServiceGRPC/billing-service/src/main/java/com/billing/BillingServiceApplication.java
+/home/danielle/JavaLearning/MicroServiceGRPC/billing-service/src/main/java/com/billing/client/CustomerClient.java
+/home/danielle/JavaLearning/MicroServiceGRPC/billing-service/src/main/java/com/billing/config/GrpcClientConfig.java
+/home/danielle/JavaLearning/MicroServiceGRPC/billing-service/src/main/java/com/billing/config/ResilienceConfig.java
 /home/danielle/JavaLearning/MicroServiceGRPC/billing-service/src/main/java/com/billing/entity/BillEntity.java
 /home/danielle/JavaLearning/MicroServiceGRPC/billing-service/src/main/java/com/billing/repository/BillRepository.java
+/home/danielle/JavaLearning/MicroServiceGRPC/billing-service/src/main/java/com/billing/service/GrpcBillService.java
 /home/danielle/JavaLearning/MicroServiceGRPC/billing-service/target/generated-sources/protobuf/com/billing/grpc/Bill.java
 /home/danielle/JavaLearning/MicroServiceGRPC/billing-service/target/generated-sources/protobuf/com/billing/grpc/BillOrBuilder.java
 /home/danielle/JavaLearning/MicroServiceGRPC/billing-service/target/generated-sources/protobuf/com/billing/grpc/BillOuterClass.java

@@ -1,3 +1,4 @@
+com/billing/client/CustomerClient.class
 com/billing/entity/BillEntity.class
 com/billing/grpc/GetBillResponseOrBuilder.class
 com/billing/grpc/PayBillRequest.class
@@ -9,8 +10,8 @@ com/billing/grpc/BillServiceGrpc$BillServiceBaseDescriptorSupplier.class
 com/billing/grpc/CreateBillResponse.class
 com/billing/grpc/GetBillResponse.class
 com/billing/grpc/GetBillRequestOrBuilder.class
-com/billing/grpc/GetBillRequest$Builder.class
 com/billing/grpc/ListBillsResponse$1.class
+com/billing/grpc/GetBillRequest$Builder.class
 com/billing/grpc/BillServiceGrpc$2.class
 com/billing/grpc/CreateBillResponse$1.class
 com/billing/grpc/PayBillRequest$Builder.class
@@ -33,14 +34,18 @@ com/billing/grpc/BillServiceGrpc$BillServiceImplBase.class
 com/billing/grpc/PayBillResponse$1.class
 com/billing/grpc/ListBillsResponseOrBuilder.class
 com/billing/grpc/BillServiceGrpc$3.class
+com/billing/service/GrpcBillService.class
+com/billing/BillingServiceApplication.class
 com/billing/grpc/BillServiceGrpc$BillServiceStub.class
 com/billing/grpc/BillServiceGrpc$1.class
 com/billing/grpc/CreateBillRequest$Builder.class
+com/billing/config/ResilienceConfig.class
 com/billing/grpc/Bill$1.class
 com/billing/grpc/BillServiceGrpc$BillServiceFutureStub.class
 com/billing/grpc/BillServiceGrpc$4.class
 com/billing/grpc/CreateBillRequest.class
 com/billing/grpc/BillServiceGrpc$MethodHandlers.class
+com/billing/config/GrpcClientConfig.class
 com/billing/grpc/PayBillResponse.class
 com/billing/grpc/CreateBillResponse$Builder.class
 com/billing/grpc/ListBillsResponse$Builder.class

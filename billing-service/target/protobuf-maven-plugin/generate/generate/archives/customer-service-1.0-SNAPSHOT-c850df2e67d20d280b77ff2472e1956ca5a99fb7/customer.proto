@@ -1,0 +1,48 @@
+syntax = "proto3";
+
+package customer.v1;
+
+option java_package = "com.customer.grpc";
+option java_multiple_files = true;
+
+service CustomerService {
+  rpc Ping (PingRequest) returns (PingResponse);
+  rpc GetCustomerById (GetCustomerByIdRequest) returns (GetCustomerByIdResponse);
+  rpc ListCustomers (ListCustomersRequest) returns (ListCustomersResponse);
+  rpc CreateCustomer (CreateCustomerRequest) returns (CreateCustomerResponse);
+}
+
+message PingRequest {}
+
+message PingResponse {
+  string message = 1;
+}
+
+message GetCustomerByIdRequest {
+  int64 id = 1;
+}
+
+message GetCustomerByIdResponse {
+  Customer customer = 1;
+}
+
+message ListCustomersRequest {}
+
+message ListCustomersResponse {
+  repeated Customer customers = 1;
+}
+
+message CreateCustomerRequest {
+  string name = 1;
+  string email = 2;
+}
+
+message CreateCustomerResponse {
+  Customer customer = 1;
+}
+
+message Customer {
+  int64 id = 1;
+  string name = 2;
+  string email = 3;
+}

@@ -7,3 +7,4 @@
 --proto_path=/home/danielle/JavaLearning/MicroServiceGRPC/billing-service/target/protobuf-maven-plugin/generate/generate/archives/grpc-services-1.83.1-c80375353df096d60b431db97f24e25730adcdb1
 --proto_path=/home/danielle/JavaLearning/MicroServiceGRPC/billing-service/target/protobuf-maven-plugin/generate/generate/archives/protobuf-java-3.25.9-f6208275b8356faf240dc3fb5ed432c5dd514f92
 --proto_path=/home/danielle/JavaLearning/MicroServiceGRPC/billing-service/target/protobuf-maven-plugin/generate/generate/archives/proto-google-common-protos-2.64.1-6e7a7c4b860e1f8233c4ca2129afd2833157bc01
+--proto_path=/home/danielle/JavaLearning/MicroServiceGRPC/billing-service/target/protobuf-maven-plugin/generate/generate/archives/customer-service-1.0-SNAPSHOT-3b163e64a440dc7c37bed42d50c07bcc74bb270e
