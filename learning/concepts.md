@@ -58,3 +58,46 @@ Record durable understanding, not every definition encountered.
 - **Learner's final recap:** "proto file is like the contract, service is the sender, and message is what will be sent, and next is the we just build and choose what to send and the framework does it for us."
 - **Corrected understanding:** the recap was right except one word — **service is the RECEIVER, not the sender**. The sender is the client (its stub). Corrected recap: (1) proto = the contract both sides agree on; (2) service = the receiver that runs logic when a request arrives; (3) message = the data passed; (4) we build objects + choose what to pass, the framework serializes, ships, and deserializes.
 - **Related concepts:** client vs server roles, stub vs service, the wire model, contract-first development.
+
+## 2026-10-01: Stub, bean, and channel — the three gRPC client objects
+
+- **Learner's questions:** "what is stub again in very simple words"; "what's a blocking stub is synchronous right"; "what is a stub again and a bean in a very simple terms".
+- **Corrected understanding:** three distinct objects with different lifetimes. **Stub** = the tool you call (looks like a local method, secretly ships bytes over the network). **Bean** = an object Spring creates once at startup and shares with everyone who injects it. **Channel** = the long-lived TCP connection underneath, shared by design so connections get reused. `ManagedChannel` = real connection; stub = a *view* on that channel; Spring bean = whatever scope you declare it in.
+- **The rule that caused the bug:** a `@Bean` is a singleton created **once**, so anything computed there is computed once. Long-lived objects (channel, stub) are correct beans; anything that must change per call (a deadline) is not.
+- **Example:** `CustomerClient(CustomerServiceBlockingStub stub)` — Spring hands the client the shared stub. One channel, one stub, every caller.
+- **Related concepts:** dependency injection, singleton scope, blocking vs async stubs, `usePlaintext()` vs TLS.
+
+## 2026-10-01: Blocking stub + the deadline is a ceiling, not a wait
+
+- **Learner's question:** "so a blocking stub is synchronous right"; "no service call should last more than 5 seconds".
+- **Corrected understanding:** a **blocking** stub parks the calling thread until the reply arrives (or the deadline fires). That is exactly why it needs a deadline: without one, a dead server hangs the thread **forever** (observed directly — a `CreateBill` never returned while customer-service was down). `withDeadlineAfter(5, SECONDS)` caps the wait; it does not consume 5s. A refused connection fails in ~0.02s; only a server that *accepts and never answers* burns the full 5s. And the deadline is **per attempt**, so 3 retries = up to 15s of deadline time.
+- **Side effect to remember:** a blocking call inside a gRPC *server* method blocks a server thread. `GrpcBillService.createBill` looks async (it takes a `StreamObserver`) but the moment it calls `verifyCustomerExists`, its server thread is parked. That is why bulkheads exist in a later phase.
+- **Example:** server dead + connection refused → measured **1.5s** total, not 15s or 16.5s, because each attempt failed instantly.
+- **Related concepts:** `StatusRuntimeException` (client-side) vs `StatusException` (server-side), thread pools, tail latency.
+
+## 2026-10-01: The three resilience layers — deadline, retry, circuit breaker
+
+- **Learner's model:** "the call will just hang for 5s then it will die and when there are more than 10 tries the breaker will automatically says unavailable."
+- **Corrected understanding:** three layers answering one problem (customer-service isn't answering), each reacting differently. **Deadline** = "wait at most 5s per attempt, then give up." **Retry** = "try up to 3 times on `UNAVAILABLE`, waiting 0.5s then 1.0s (exponential backoff) — maybe it's a blip." **Circuit breaker** = "it's really dead, stop knocking." Three corrections to the original model: (1) the 5s is a *ceiling*, not a fixed wait; (2) the breaker counts a **failure rate over a window** (≥50% of the last 10, minimum 5 calls), not a raw count; (3) after 30s it goes to **HALF_OPEN, not straight to CLOSED**.
+- **Why each exists:** deadline protects a *thread*, retry covers *transient* failures, breaker prevents the *death spiral* where every request pays the full retry cost against a dead server.
+- **Example:** dead server — 1st call 1.517s (3 attempts + backoff), 2nd call 0.012s (breaker now open). Same storm, 20 requests: 1.5s total instead of 30s.
+- **Related concepts:** exponential backoff, sliding window, half-open probes, fail-fast, call isolation.
+
+## 2026-10-01: The breaker counts a rate, not a tally
+
+- **Learner's questions:** "when there are 5>= calls the breaker will be open"; "does every retry count as 1 in the thing that needs 50%"; "then the second breaker will open and if its open after 30s it will close"; "does the 3 needs to be sucessfull or it can be 1 of 2 or 2 of 3".
+- **Corrected understanding:** `minimum-number-of-calls=5` means the breaker **ignores everything** until 5 entries exist — 3 entries at 100% failure still stays CLOSED. Then it judges: `failure-rate-threshold=50` over `sliding-window-size=10`. Server 100% down → the 5th entry trips it. 5 entries with 3 failed = 60% → also opens. Counting alone would let ordinary noise trip it, which is why it's a rate.
+- **Retry inner, breaker outer/inner matters:** verified from bytecode that `Retry` order = 2147483642 and `CircuitBreaker` = 2147483643, and lower = outer, so **retry wraps the breaker**. Each attempt passes *through* it → 1 logical call = **3 breaker entries**, so a real outage trips in ~2 logical calls. Swapping the order gives 1 entry per logical call (slower to trip, but immune to a blip that retry absorbed).
+- **Half-open is all-or-nothing:** after 30s, the first **3 real user calls** (not test pings) are let through as probes. 3 of 3 pass → CLOSED. Any single failure → back to OPEN for another 30s. Not "2 of 3" — a server failing 1-in-3 would look healthy and get full traffic while dropping calls.
+- **Error code tells you which layer acted:** server down + breaker closed → `Unavailable` (real gRPC status). Breaker open → `Unknown`, because the breaker throws `CallNotPermittedException` (a plain `RuntimeException`, not a `StatusRuntimeException`) and gRPC has no status for it.
+- **Example:** 1st call → 3 entries, breaker ignores (below 5). 2nd call → attempt 1 = entry 4, attempt 2 = entry 5 → **OPEN** → attempt 3 and every later call rejected in 0.012s.
+- **Related concepts:** aspect order, `@Order` semantics, failure-rate vs failure-count, degraded vs rejected traffic.
+
+## 2026-10-01: Retry is only safe on idempotent operations
+
+- **Learner's question:** "what will trigger the retry? will it like be idempotent" — the right question to ask before shipping any retry.
+- **Corrected understanding:** a retry assumes the first attempt failed. Sometimes it didn't — the server completed the work and the **reply was lost**. `Attempt 1: card charged, reply lost → billing sees UNAVAILABLE → Attempt 2: charged again`. The client cannot distinguish "never arrived" from "arrived, answer lost." Any operation with a **side effect** (create, charge, delete, send) is unsafe to retry without protection.
+- **The fix is an idempotency key:** the client sends a unique ID with each create; the server remembers processed IDs and returns the *original* result instead of doing the work twice. That's how Stripe and PayPal avoid double-charging. Order of fixes matters — add the key *first*, then retries become safe and you keep the blip recovery.
+- **The current code is safe by placement:** `@Retry` sits on `verifyCustomerExists`, which only **reads** (`getCustomerById`). Reads have no side effects, so retrying 3 times is free of duplicates. The actual bill write is a **local** `billRepository.save(...)` — no network, nothing to retry. Had the retry been on a remote create, this bug would already exist.
+- **Example:** 5 entries, 3 failed = 60% ≥ 50% → OPEN. Contrast with the lost-reply charge: retry without a key = customer paid twice.
+- **Related concepts:** idempotency, at-least-once vs exactly-once, side effects, transactional outbox, safe-to-retry status codes.
