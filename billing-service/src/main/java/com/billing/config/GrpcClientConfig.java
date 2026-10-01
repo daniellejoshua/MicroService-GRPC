@@ -8,7 +8,6 @@ import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import com.customer.grpc.CustomerServiceGrpc;
 
-import java.util.concurrent.TimeUnit;
 
 @Configuration
 public class GrpcClientConfig {
@@ -24,7 +23,7 @@ public class GrpcClientConfig {
     }
     @Bean
     public CustomerServiceGrpc.CustomerServiceBlockingStub customerBlockingStub(ManagedChannel channel) {
-        return CustomerServiceGrpc.newBlockingStub(channel).withDeadlineAfter(5, TimeUnit.SECONDS);
+       return CustomerServiceGrpc.newBlockingStub(channel);
     }
 
 }
