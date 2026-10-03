@@ -1,0 +1,122 @@
+{
+  "uid": "resilience-dash",
+  "title": "Billing → Customer: Resilience",
+  "tags": ["grpc", "resilience4j"],
+  "timezone": "browser",
+  "schemaVersion": 39,
+  "version": 1,
+  "refresh": "2s",
+  "time": { "from": "now-10m", "to": "now" },
+  "panels": [
+    {
+      "id": 1,
+      "type": "timeseries",
+      "title": "1. Circuit Breaker State  (1.0 = current state)",
+      "description": "All six states are plotted on purpose. Only one sits at 1.0 at a time. Plotting only state=\"open\" would show a flat 0 and look like nothing is happening.",
+      "datasource": { "type": "prometheus", "uid": "prometheus" },
+      "gridPos": { "h": 9, "w": 12, "x": 0, "y": 0 },
+      "targets": [
+        {
+          "refId": "A",
+          "expr": "resilience4j_circuitbreaker_state{service=\"billing\"}",
+          "legendFormat": "{{state}}",
+          "datasource": { "type": "prometheus", "uid": "prometheus" }
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "min": 0,
+          "max": 1.05,
+          "unit": "short",
+          "custom": {
+            "lineWidth": 2,
+            "fillOpacity": 20,
+            "showPoints": "always",
+            "pointSize": 6,
+            "spanNulls": false
+          }
+        },
+        "overrides": []
+      },
+      "options": {
+        "legend": { "displayMode": "table", "placement": "right", "calcs": ["lastNotNull"] },
+        "tooltip": { "mode": "multi", "sort": "none" }
+      }
+    },
+    {
+      "id": 2,
+      "type": "timeseries",
+      "title": "2. Retry Calls by Kind  (counter — steps upward, never down)",
+      "description": "successful_without_retry / successful_with_retry / failed_without_retry / failed_with_retry. Watch failed_with_retry climb 2x per logical call: retry wraps the breaker, so each attempt is counted.",
+      "datasource": { "type": "prometheus", "uid": "prometheus" },
+      "gridPos": { "h": 9, "w": 12, "x": 12, "y": 0 },
+      "targets": [
+        {
+          "refId": "A",
+          "expr": "resilience4j_retry_calls_total{service=\"billing\"}",
+          "legendFormat": "{{kind}}",
+          "datasource": { "type": "prometheus", "uid": "prometheus" }
+        }
+      ],
+      "fieldConfig": { "defaults": { "unit": "short", "custom": { "lineWidth": 2, "fillOpacity": 10, "spanNulls": false } }, "overrides": [] },
+      "options": {
+        "legend": { "displayMode": "table", "placement": "right", "calcs": ["lastNotNull"] },
+        "tooltip": { "mode": "multi", "sort": "none" }
+      }
+    },
+    {
+      "id": 3,
+      "type": "timeseries",
+      "title": "3. Breaker Calls by Outcome  (note the 'ignored' series)",
+      "description": "kind=\"ignored\" is the NOT_FOUND exclusion from ResilienceConfig.isRealFailure — those calls never counted as breaker failures. kind=\"not_permitted\" would mean the breaker rejected the call.",
+      "datasource": { "type": "prometheus", "uid": "prometheus" },
+      "gridPos": { "h": 9, "w": 12, "x": 0, "y": 9 },
+      "targets": [
+        {
+          "refId": "A",
+          "expr": "resilience4j_circuitbreaker_calls_seconds_count{service=\"billing\"}",
+          "legendFormat": "{{kind}}",
+          "datasource": { "type": "prometheus", "uid": "prometheus" }
+        }
+      ],
+      "fieldConfig": { "defaults": { "unit": "short", "custom": { "lineWidth": 2, "fillOpacity": 10, "spanNulls": false } }, "overrides": [] },
+      "options": {
+        "legend": { "displayMode": "table", "placement": "right", "calcs": ["lastNotNull"] },
+        "tooltip": { "mode": "multi", "sort": "none" }
+      }
+    },
+    {
+      "id": 4,
+      "type": "timeseries",
+      "title": "4. Window Buffer + Failure Rate + Rejected Calls",
+      "description": "buffered_calls fills toward 5 (minimum-number-of-calls) before the breaker judges anything. failure_rate is the 0-100 value compared against failure-rate-threshold=50. not_permitted_calls_total climbs only while the breaker is OPEN.",
+      "datasource": { "type": "prometheus", "uid": "prometheus" },
+      "gridPos": { "h": 9, "w": 12, "x": 12, "y": 9 },
+      "targets": [
+        {
+          "refId": "A",
+          "expr": "resilience4j_circuitbreaker_buffered_calls{service=\"billing\"}",
+          "legendFormat": "buffered_calls",
+          "datasource": { "type": "prometheus", "uid": "prometheus" }
+        },
+        {
+          "refId": "B",
+          "expr": "resilience4j_circuitbreaker_failure_rate{service=\"billing\"}",
+          "legendFormat": "failure_rate %",
+          "datasource": { "type": "prometheus", "uid": "prometheus" }
+        },
+        {
+          "refId": "C",
+          "expr": "resilience4j_circuitbreaker_not_permitted_calls_total{service=\"billing\"}",
+          "legendFormat": "not_permitted_total",
+          "datasource": { "type": "prometheus", "uid": "prometheus" }
+        }
+      ],
+      "fieldConfig": { "defaults": { "unit": "short", "custom": { "lineWidth": 2, "fillOpacity": 10, "spanNulls": false } }, "overrides": [] },
+      "options": {
+        "legend": { "displayMode": "table", "placement": "right", "calcs": ["lastNotNull"] },
+        "tooltip": { "mode": "multi", "sort": "none" }
+      }
+    }
+  ]
+}
